@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>无文字卡片动效</title><style>
+    :root{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#e8e8e5;background:#08090b;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-width:320px;background:#08090b}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}a{color:inherit;text-decoration:none}
+    .page{min-height:100dvh;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 53%,#43151a 0,#170d11 32%,#08090b 70%)}
+    .page::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#e5354410 1px,transparent 1px),linear-gradient(90deg,#e5354410 1px,transparent 1px);background-size:54px 54px;mask-image:radial-gradient(ellipse,#0008,transparent 70%)}
+    .stage{position:relative;min-height:calc(100dvh - 78px);display:grid;grid-template-columns:minmax(190px,1fr) minmax(320px,600px) minmax(190px,1fr);align-items:center;gap:20px;width:min(1500px,calc(100% - 64px));margin:auto;perspective:1700px;--px:0deg;--py:0deg;--shift-x:0px;--shift-y:0px}
+    .stage-glow{position:absolute;z-index:0;left:50%;top:50%;width:min(62vw,800px);height:min(62vw,800px);transform:translate(-50%,-50%);border-radius:50%;background:#ff343a45;filter:blur(100px);pointer-events:none;opacity:.28}
+    .ambient-ring{position:absolute;left:50%;top:49%;width:min(69vw,780px);aspect-ratio:1;border:1px solid #ff52521d;border-radius:50%;transform:translate(-50%,-50%) rotate(-15deg);box-shadow:0 0 50px #ff222218,inset 0 0 50px #ff222214;pointer-events:none}.ambient-ring::before,.ambient-ring::after{content:"";position:absolute;inset:11%;border:1px dashed #ff77772a;border-radius:50%}.ambient-ring::after{inset:29%;border-style:solid}
+    .card-zone{position:relative;z-index:2;height:min(78dvh,750px);min-height:560px;display:grid;place-items:center;transform-style:preserve-3d;touch-action:none;cursor:grab}.card-zone:active{cursor:grabbing}.card-zone::after{content:"";position:absolute;z-index:-1;bottom:0;width:68%;height:35px;border-radius:50%;background:#000;filter:blur(21px);opacity:.9}
+    .card-orbit{position:relative;width:min(100%,445px);aspect-ratio:2/3;transform-style:preserve-3d;transform:rotateX(var(--py)) rotateY(var(--px)) translate3d(var(--shift-x),var(--shift-y),0);transition:transform .18s ease-out;will-change:transform}
+    .card-rig{width:100%;height:100%;position:relative;transform-style:preserve-3d;transform:rotateY(0deg);opacity:1}
+    .playing .card-rig{animation:card-arrive 2.25s cubic-bezier(.16,.78,.2,1) both}
+    @keyframes card-arrive{0%{opacity:0;transform:translateY(110px) rotateY(-175deg) rotateZ(-12deg) scale(.62);filter:blur(15px)}16%{opacity:1;filter:blur(0)}52%{transform:translateY(-15px) rotateY(-90deg) rotateZ(-4deg) scale(.87)}78%{transform:translateY(0) rotateY(13deg) rotateZ(1deg) scale(1.07)}100%{opacity:1;transform:rotateY(0) rotateZ(0) scale(1);filter:none}}
+    .card-back,.card-front{position:absolute;inset:0;backface-visibility:hidden;transform-style:preserve-3d}.card-back{transform:rotateY(180deg);background:radial-gradient(circle at center,#53252b,#0e0d11 55%,#07080a);border:2px solid #84343b;box-shadow:inset 0 0 0 8px #100e11,inset 0 0 0 10px #71292f,0 25px 55px #000b;display:grid;place-items:center}.card-back::before{content:"";position:absolute;inset:20px;border:1px solid #bd4c567a}.card-back::after{content:"";width:58%;aspect-ratio:1;border:1px solid #ce4a53;border-radius:50%;box-shadow:0 0 0 16px #e93d3b16,0 0 0 18px #c8474855,0 0 0 47px #e93d3b0c,0 0 0 49px #c8474838}.back-glyph{position:absolute;color:#ff8b8b;font:700 145px Georgia,serif;text-shadow:0 0 30px #e72e4f}.card-front{transform:translateZ(1px);clip-path:inset(0)}
+    .plate{position:absolute;inset:0;background:url('example/background.png') center/100% 100% no-repeat;box-shadow:0 22px 60px #000e,0 0 36px #fc3b3640;overflow:hidden}
+    .plate-art{position:absolute;inset:2.7% 3%;overflow:hidden;clip-path:polygon(2% 0,98% 0,100% 2%,100% 98%,98% 100%,2% 100%,0 98%,0 2%)}
+    .plate-art::before{content:"";position:absolute;inset:-3% -3.2%;background:url('example/background.png') center/100% 100% no-repeat;transform:translate3d(var(--bg-x,0px),var(--bg-y,0px),0) scale(1.12);transition:transform .25s ease-out;will-change:transform}
+    .plate::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(160deg,#75172466,#a1212d85);mix-blend-mode:multiply;box-shadow:inset 0 0 85px #04040676}
+    .tower-depth{position:absolute;z-index:3;inset:0;transform:translate3d(var(--tower-x,0px),var(--tower-y,0px),18px) scale(.78);transform-style:preserve-3d;transition:transform .18s ease-out;pointer-events:none;will-change:transform}
+    .tower,.tower-halo{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
+    .tower{filter:drop-shadow(0 9px 7px #030304bd) drop-shadow(0 0 6px #b92d3440)}
+    .tower-halo{transform:translate3d(var(--halo-x,2px),var(--halo-y,1px),-2px) scale(1.006);filter:drop-shadow(-2px -1px 1px #df4549) drop-shadow(3px 2px 3px #98212d) drop-shadow(0 0 8px #661925);opacity:var(--glow,.45);mix-blend-mode:screen;transition:opacity .25s ease-out,transform .22s ease-out}
+    .tower-foil{position:absolute;inset:0;pointer-events:none;mask:url('example/foreground.png') center/100% 100% no-repeat;background:linear-gradient(var(--foil-angle,116deg),transparent 33%,#8e1d2f26 44%,#ed4656a8 49%,#9f293c54 54%,transparent 64%);background-size:210% 210%;background-position:var(--foil-x,50%) var(--foil-y,50%);mix-blend-mode:screen;opacity:calc(var(--foil-opacity,.45) * .55);transition:background-position .2s ease-out,opacity .2s ease-out}
+    .foil{position:absolute;z-index:4;inset:2.5%;overflow:hidden;pointer-events:none;mix-blend-mode:screen;opacity:var(--foil-opacity,.45);background:linear-gradient(var(--foil-angle,116deg),transparent 33%,#9e20351b 42%,#ec475183 49%,#8f1c3350 55%,transparent 66%);background-size:185% 185%;background-position:var(--foil-x,50%) var(--foil-y,50%);transition:background-position .2s ease-out,opacity .2s ease-out}
+    @keyframes luck-reveal{from{opacity:0;transform:translateY(10px) scale(.5) rotate(-18deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+    .stage[data-ready="false"] .tower-halo{opacity:0}.stage[data-ready="false"] .foil{opacity:.12}
+    .playing .tower{animation:tower-breakout 4.25s cubic-bezier(.15,.72,.15,1) both}
+    @keyframes tower-breakout{0%,48%{opacity:0;transform:translateY(20px) scale(.87);filter:blur(10px)}54%{opacity:1;filter:blur(0)}69%{opacity:1;transform:translateY(-24px) scale(1.08)}79%{transform:translateY(4px) scale(.97)}100%{opacity:1;transform:translateY(0) scale(1);filter:none}}
+    .shock{position:absolute;z-index:5;left:-21%;top:37%;width:142%;height:11%;transform:translateZ(175px) rotate(-35deg) scaleX(0);opacity:0;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(transparent 8%,#a41b3000 25%,#c52542 43%,#ed5a57 50%,#c52542 57%,#a41b3000 75%,transparent 92%);filter:blur(3px) drop-shadow(0 0 24px #c5233a)}
+    .playing .shock{animation:shock-strike 1.15s steps(1,end) 2.45s both}@keyframes shock-strike{0%{opacity:0;transform:translateZ(175px) rotate(-35deg) scaleX(.05)}12%{opacity:1;transform:translateZ(175px) rotate(-35deg) scaleX(1)}22%{opacity:.1}31%{opacity:1}48%{opacity:0}62%{opacity:.72}80%,100%{opacity:0}}
+    .blast{position:absolute;z-index:7;inset:-30%;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#ed6259 0,#d72b3aaa 12%,#a920372c 32%,transparent 56%);mix-blend-mode:screen;opacity:0}.playing .blast{animation:blast .8s ease-out 2.55s both}@keyframes blast{0%{opacity:0;transform:scale(.25)}14%{opacity:.95}100%{opacity:0;transform:scale(1.6)}}
+    .fragment{position:absolute;z-index:6;left:var(--x);top:var(--y);width:var(--w);height:var(--h);background:linear-gradient(145deg,#7b8487,#12171d 31%,#080a0d 69%,#aa333a);clip-path:polygon(13% 0,90% 8%,100% 70%,31% 100%,0 45%);border-left:1px solid #ff6868;box-shadow:0 0 9px #ff3131;transform:translateZ(50px) rotate(var(--rot));opacity:0;pointer-events:none}.playing .fragment{animation:fragment-fly 4.1s cubic-bezier(.2,.75,.18,1) both}@keyframes fragment-fly{0%,58%{opacity:0;transform:translateZ(0) translate(0,0) rotate(0) scale(.1)}67%{opacity:1}82%{transform:translateZ(90px) translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1.08)}100%{opacity:0;transform:translateZ(50px) translate(calc(var(--dx)*.45),calc(var(--dy)*.45)) rotate(var(--rot)) scale(.8)}}
+  
+
+    :root,body{color:#304d47;background:#f6f4ee}.page{background:radial-gradient(ellipse at 53% 47%,#e1f1e8,#f6f4ee 66%)}.page::before{display:none}
+    .stage-glow{background:#b6d6c0;opacity:.22}.ambient-ring{border-color:#799a7c24;box-shadow:none}.ambient-ring::before,.ambient-ring::after{border-color:#799a7c17}
+    .card-zone::after{background:#6f9c87;opacity:.22;bottom:5%;filter:blur(24px)}
+    .card-front{border-radius:22px;clip-path:inset(0 round 22px);box-shadow:0 25px 60px #668b742b,0 3px 8px #52756416}
+    .plate{background-color:#ffe2c9;box-shadow:none}.plate::after{background:none;box-shadow:inset 0 0 0 2px #ffffffb8,inset 0 0 0 10px #fff7ef44;mix-blend-mode:normal;border-radius:22px;z-index:8}
+    .plate-art{inset:0;clip-path:none}.plate-art::before{inset:0;transform:translate3d(var(--bg-x,0px),var(--bg-y,0px),0) scale(1.12)}
+    .tower-depth{transform:translate3d(var(--tower-x,0px),var(--tower-y,0px),18px) scale(.82)}
+    .tower{filter:drop-shadow(0 16px 8px #617d6033)}.tower-halo{filter:drop-shadow(0 0 2px #b6f9dd);opacity:calc(var(--glow,.45)*.15)}
+    .tower-foil{background:linear-gradient(var(--foil-angle,116deg),transparent 40%,#fff9e666 49%,transparent 60%);background-size:210% 210%;background-position:var(--foil-x,50%) var(--foil-y,50%);opacity:.15}
+    .foil{background:linear-gradient(var(--foil-angle,116deg),transparent 35%,#fffaf348 49%,transparent 65%);background-size:185% 185%;background-position:var(--foil-x,50%) var(--foil-y,50%);opacity:.22;mix-blend-mode:soft-light}
+    .card-back{border:2px solid #d4e5d9;border-radius:22px;background:linear-gradient(145deg,#e5f3e7,#8ebba6);box-shadow:inset 0 0 0 8px #e5f3e76e,0 25px 55px #6e917533}.card-back::before{border-color:#fff9;border-radius:14px}.card-back::after{border-color:#f6fff4;box-shadow:0 0 0 16px #ffffff18,0 0 0 18px #fff7,0 0 0 47px #ffffff10,0 0 0 49px #fff4}.back-glyph{color:#fcfff6;text-shadow:none;font-size:105px}
+    .shock{left:7%;top:24%;width:86%;height:auto;aspect-ratio:1;border:2px solid #fff9dc;border-radius:50%;background:none;filter:none;transform:scale(.2);mix-blend-mode:normal}
+    .playing .shock{animation:hello-ring 1.15s ease-out 2.45s both}@keyframes hello-ring{0%{opacity:0;transform:scale(.2)}15%{opacity:.7}100%{opacity:0;transform:scale(1.5)}}
+    .blast{background:radial-gradient(circle,#ffffe5b8,transparent 58%);mix-blend-mode:soft-light}.playing .blast{animation:blast .8s ease-out 2.55s both}
+    .fragment{background:#fff6d5;border:0;box-shadow:none;clip-path:polygon(50% 0,61% 37%,100% 50%,61% 63%,50% 100%,39% 63%,0 50%,39% 37%)}
+  
+
+    .page{min-height:100dvh}.stage{display:grid;grid-template-columns:1fr;place-items:center;width:100%;height:100dvh;min-height:0;gap:0;padding:34px 30px 64px}.card-zone{height:auto;min-height:0;width:100%;padding:0;max-height:none}.card-orbit{width:min(445px,76vw,calc((100dvh - 112px)*.6667))}.ambient-ring{width:min(86vw,780px)}
+    .replay{position:fixed;z-index:20;right:24px;bottom:22px;width:46px;height:46px;display:grid;place-items:center;padding:0;border:1px solid #60877629;border-radius:50%;background:#ffffffb0;color:#416f5e;box-shadow:0 4px 20px #49715810;backdrop-filter:blur(10px)}.replay:hover{background:#fff}.replay svg{width:20px;height:20px}.replay:focus-visible{outline:2px solid #416f5e;outline-offset:4px}
+    @media(max-width:600px){.stage{padding:24px 18px 70px}.card-orbit{width:min(80vw,calc((100dvh - 110px)*.6667))}.replay{right:18px;bottom:18px}}
+    @media(prefers-reduced-motion:reduce){.playing .card-rig,.playing .tower,.playing .shock,.playing .blast,.playing .fragment{animation:none!important}.shock,.blast,.fragment{display:none}.card-orbit{transition:none}}
+
+/* Keep the subject in the same 3D coordinate space as the card, above the backing plate. */
+.card-front{clip-path:none;overflow:visible;transform-style:preserve-3d}
+.card-rig::before{content:"";position:absolute;inset:0;border-radius:22px;background:#d5b9a1;transform:translateZ(-8px);box-shadow:0 3px 0 #fff4,inset 0 0 0 2px #e6c9af}
+.plate{border-radius:22px;transform:translateZ(0)}
+.tower-depth{transform:translate3d(var(--tower-x,0px),var(--tower-y,0px),80px) scale(.92)}
+.tower{filter:drop-shadow(0 4px 3px #58776920)}
+.subject-shadow{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;transform:translate3d(var(--shadow-x,12px),var(--shadow-y,20px),3px) scale(.92);filter:brightness(.15) blur(12px);opacity:.16;transition:transform .24s ease-out,opacity .5s}
+.subject-shade{position:absolute;inset:0;pointer-events:none;mask:url('example/foreground.png') center/100% 100% no-repeat;background:linear-gradient(var(--light-angle,115deg),#fff5de30,transparent 45%,#153a2c70);mix-blend-mode:multiply;opacity:.21;transition:background .2s}
+.tower-foil{background:radial-gradient(ellipse at var(--light-x,35%) var(--light-y,30%),#fffce798,transparent 54%);opacity:.3;mix-blend-mode:soft-light}
+.tower-halo{filter:drop-shadow(-1px -1px 1px #fff6d2) drop-shadow(2px 2px 2px #4a957b66);opacity:.16}
+.stage[data-ready="false"] .subject-shadow,.stage[data-ready="false"] .subject-shade{opacity:0}
+</style></head><body>
+<div class="page"><main class="stage" id="stage" aria-label="立体交互卡片"><div class="stage-glow" aria-hidden="true"></div><div class="ambient-ring" aria-hidden="true"></div><div class="card-zone"><div class="card-orbit" id="orbit">        <div class="card-rig">
+          <div class="card-back" aria-hidden="true"><span class="back-glyph">✦</span></div>
+          <div class="card-front">
+            <div class="plate"><div class="plate-art"></div></div>
+            <img class="subject-shadow" src="example/foreground.png" alt="" aria-hidden="true" draggable="false"><div class="tower-depth"><img class="tower-halo" src="example/foreground.png" alt="" draggable="false" /><img class="tower" src="example/foreground.png" alt="" draggable="false" /><div class="subject-shade"></div><div class="tower-foil"></div></div>
+            <div class="foil"></div>
+            <div class="shock"></div><div class="blast"></div>
+            <i class="fragment" style="--x:8%;--y:23%;--w:9%;--h:6%;--dx:-74px;--dy:-92px;--rot:-38deg"></i>
+            <i class="fragment" style="--x:78%;--y:18%;--w:8%;--h:5%;--dx:85px;--dy:-68px;--rot:47deg"></i>
+            <i class="fragment" style="--x:3%;--y:52%;--w:10%;--h:6%;--dx:-65px;--dy:48px;--rot:61deg"></i>
+            <i class="fragment" style="--x:89%;--y:45%;--w:8%;--h:7%;--dx:71px;--dy:28px;--rot:-57deg"></i>
+            <i class="fragment" style="--x:37%;--y:6%;--w:5%;--h:5%;--dx:-44px;--dy:-73px;--rot:94deg"></i>
+            <i class="fragment" style="--x:66%;--y:58%;--w:5%;--h:5%;--dx:61px;--dy:68px;--rot:-33deg"></i>
+          </div>
+        </div>
+</div></div></main>
+<button class="replay" id="replay" type="button" aria-label="重播动画"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9a8 8 0 1 1 .4 7M4 4v5h5"/></svg></button></div><script>
+const stage=document.getElementById('stage'),orbit=document.getElementById('orbit'),cardZone=document.querySelector('.card-zone');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const depth={value:2.6};
+let ready=false,timer,poseX=0,poseY=0;
+  function setPose(x,y){
+    poseX=Math.max(-1,Math.min(1,x));poseY=Math.max(-1,Math.min(1,y));
+    const strength=Number(depth.value);
+    orbit.style.setProperty('--px',`${poseX*21}deg`);
+    orbit.style.setProperty('--py',`${poseY*-16}deg`);
+    orbit.style.setProperty('--shift-x',`${poseX*10}px`);
+    orbit.style.setProperty('--shift-y',`${poseY*8}px`);
+    orbit.style.setProperty('--bg-x',`${poseX*-7*strength}px`);
+    orbit.style.setProperty('--bg-y',`${poseY*-6*strength}px`);
+    orbit.style.setProperty('--tower-x',`${poseX*13*strength}px`);
+    orbit.style.setProperty('--tower-y',`${poseY*13*strength}px`);
+    orbit.style.setProperty('--halo-x',`${poseX*-2+2}px`);
+    orbit.style.setProperty('--halo-y',`${poseY*-2+1}px`);
+    orbit.style.setProperty('--foil-x',`${50+poseX*42}%`);
+    orbit.style.setProperty('--foil-y',`${50+poseY*35}%`);
+    orbit.style.setProperty('--foil-angle',`${116+poseX*32}deg`);
+    orbit.style.setProperty('--shadow-x',`${12-poseX*23}px`);
+    orbit.style.setProperty('--shadow-y',`${20-poseY*18}px`);
+    orbit.style.setProperty('--light-x',`${35-poseX*23}%`);
+    orbit.style.setProperty('--light-y',`${30-poseY*20}%`);
+    orbit.style.setProperty('--light-angle',`${115+poseX*50}deg`);
+  }
+
+orbit.style.setProperty('--glow','.44');orbit.style.setProperty('--foil-opacity','.32');
+function start(){clearTimeout(timer);ready=false;stage.dataset.ready='false';stage.classList.remove('playing');setPose(0,0);if(reduced.matches){ready=true;stage.dataset.ready='true';return;}void stage.offsetWidth;stage.classList.add('playing');timer=setTimeout(()=>{ready=true;stage.dataset.ready='true'},4300)}
+document.getElementById('replay').addEventListener('click',start);
+stage.addEventListener('pointermove',event=>{if(!ready||reduced.matches||event.pointerType==='touch')return;const zone=cardZone.getBoundingClientRect();const rect={left:zone.left+(zone.width-orbit.offsetWidth)/2,top:zone.top+(zone.height-orbit.offsetHeight)/2,width:orbit.offsetWidth,height:orbit.offsetHeight};setPose((event.clientX-rect.left)/rect.width*2-1,(event.clientY-rect.top)/rect.height*2-1)});
+cardZone.addEventListener('pointerdown',event=>{if(event.pointerType==='touch')cardZone.setPointerCapture(event.pointerId)});
+cardZone.addEventListener('pointermove',event=>{if(!ready||reduced.matches||event.pointerType!=='touch'||!cardZone.hasPointerCapture(event.pointerId))return;event.preventDefault();const zone=cardZone.getBoundingClientRect();const rect={left:zone.left+(zone.width-orbit.offsetWidth)/2,top:zone.top+(zone.height-orbit.offsetHeight)/2,width:orbit.offsetWidth,height:orbit.offsetHeight};setPose((event.clientX-rect.left)/rect.width*2-1,(event.clientY-rect.top)/rect.height*2-1)});
+stage.addEventListener('pointerleave',()=>setPose(0,0));
+reduced.addEventListener('change',start);start();
+</script></body></html>

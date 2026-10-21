@@ -1,0 +1,4 @@
+interface:
+  display_name: "无文字卡片动效"
+  short_description: "将单张图片制作成无文字的翻牌入场与分层鼠标视差卡片动效"
+  default_prompt: "使用 $image-card-motion-no-text 把这张图制作成无文字的立体交互卡片。"
